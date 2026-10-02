@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScreenCraft - Custom App Screen & Mockup Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Navigation / Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <span class="logo-icon">📱</span>
+        <div class="logo-text">
+          <h1>ScreenCraft</h1>
+          <span class="tag">Studio v1.0</span>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="#studio" class="active">Studio</a>
+        <a href="#templates">Quick Presets</a>
+        <a href="#features">Features</a>
+      </nav>
+      <div class="nav-actions">
+        <button id="quick-reset-btn" class="btn-ghost" title="Reset all fields">Reset</button>
+        <button id="download-screen-btn" class="btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export Image
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="badge">🔥 Create viral mockups & game invite screens in seconds</div>
+      <h2>Design Custom App Screens <br><span class="gradient-text">With Realistic Live Preview</span></h2>
+      <p>Pick your favorite game or app like Free Fire, customize the message, add custom wallpapers, and export high-res phone screenshots.</p>
+    </div>
+
+    <!-- Quick Preset Cards -->
+    <div class="preset-strip" id="templates">
+      <span class="preset-strip-label">Popular Presets:</span>
+      <button class="preset-pill active" data-preset="freefire">
+        🔥 Free Fire: "Who called you?"
+      </button>
+      <button class="preset-pill" data-preset="pubg">
+        🪂 PUBG: "Ranked Room Ready"
+      </button>
+      <button class="preset-pill" data-preset="whatsapp">
+        💬 WhatsApp: "Secret Message"
+      </button>
+      <button class="preset-pill" data-preset="discord">
+        🎮 Discord: "Squad Call"
+      </button>
+      <button class="preset-pill" data-preset="instagram">
+        📸 Instagram: "DM Mention"
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-container" id="studio">
+    <!-- Left Column: Customization Controls -->
+    <section class="controls-panel">
+      <div class="panel-header">
+        <h3>Customization Options</h3>
+        <p>Tweak every element and watch the live preview update instantly.</p>
+      </div>
+
+      <!-- Step 1: App Selection -->
+      <div class="control-card">
+        <div class="card-title">
+          <span class="step-num">1</span>
+          <div>
+            <h4>Select Application</h4>
+            <span class="card-subtitle">Choose the app style for your custom screen</span>
+          </div>
+        </div>
+
+        <div class="app-selector-grid">
+          <button class="app-card active" data-app="freefire">
+            <div class="app-icon-badge ff-badge">🔥</div>
+            <div class="app-info">
+              <span class="app-name">Free Fire</span>
+              <span class="app-tag">Garena Action</span>
+            </div>
+          </button>
+          
+          <button class="app-card" data-app="pubg">
+            <div class="app-icon-badge pubg-badge">🪂</div>
+            <div class="app-info">
+              <span class="app-name">PUBG / BGMI</span>
+              <span class="app-tag">Battle Royale</span>
+            </div>
+          </button>
+
+          <button class="app-card" data-app="whatsapp">
+            <div class="app-icon-badge wa-badge">💬</div>
+            <div class="app-info">
+              <span class="app-name">WhatsApp</span>
+              <span class="app-tag">Chat & Alert</span>
+            </div>
+          </button>
+
+          <button class="app-card" data-app="instagram">
+            <div class="app-icon-badge ig-badge">📸</div>
+            <div class="app-info">
+              <span class="app-name">Instagram</span>
+              <span class="app-tag">Direct Message</span>
+            </div>
+          </button>
+
+          <button class="app-card" data-app="discord">
+            <div class="app-icon-badge discord-badge">🎮</div>
+            <div class="app-info">
+              <span class="app-name">Discord</span>
+              <span class="app-tag">Voice & Squad</span>
+            </div>
+          </button>
+
+          <button class="app-card" data-app="custom">
+            <div class="app-icon-badge custom-badge">⚙️</div>
+            <div class="app-info">
+              <span class="app-name">Custom App</span>
+              <span class="app-tag">Universal Style</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="custom-app-field hidden" id="custom-app-settings">
+          <label for="custom-app-title">Custom App Title</label>
+          <input type="text" id="custom-app-title" placeholder="e.g. Valorant Mobile / COD" value="Custom Game">
+        </div>
+      </div>
+
+      <!-- Step 2: Screen Mode / Dialog Type -->
+      <div class="control-card">
+        <div class="card-title">
+          <span class="step-num">2</span>
+          <div>
+            <h4>Screen Layout Style</h4>
+            <span class="card-subtitle">Display mode on the mobile screen</span>
+          </div>
+        </div>
+
+        <div class="layout-types">
+          <label class="radio-pill">
+            <input type="radio" name="layout-mode" value="game-dialog" checked>
+            <span>⚔️ Game Pop-up Dialog</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="layout-mode" value="notification">
+            <span>🔔 Lockscreen Notification</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="layout-mode" value="banner">
+            <span>📌 Top In-App Banner</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Step 3: Message & Content Input -->
+      <div class="control-card">
+        <div class="card-title">
+          <span class="step-num">3</span>
+          <div>
+            <h4>Message & Details</h4>
+            <span class="card-subtitle">Set sender name, prompt message, and buttons</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sender-name">Sender / Inviter Name</label>
+          <div class="input-wrapper">
+            <input type="text" id="sender-name" value="SquadLeader_OP" placeholder="e.g. Free Fire Squad, Mom, Bestie">
+            <span class="char-icon">👤</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="message-text">Message / Dialogue Content</label>
+          <textarea id="message-text" rows="3" placeholder="Enter message here...">Who called you to play? 😂</textarea>
+          <div class="quick-emojis">
+            <span>Quick add:</span>
+            <button type="button" class="emoji-btn">😂</button>
+            <button type="button" class="emoji-btn">🔥</button>
+            <button type="button" class="emoji-btn">💀</button>
+            <button type="button" class="emoji-btn">🎮</button>
+            <button type="button" class="emoji-btn">👑</button>
+            <button type="button" class="emoji-btn">⚠️</button>
+            <button type="button" class="emoji-btn">🎯</button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status-subtext">Subtitle / Status Tag</label>
+            <input type="text" id="status-subtext" value="Ranked Battle Royale • Squad" placeholder="e.g. 5m ago, Ranked Match">
+          </div>
+          <div class="form-group">
+            <label for="time-text">Status Bar Time</label>
+            <input type="text" id="time-text" value="09:41" placeholder="09:41">
+          </div>
+        </div>
+
+        <div class="form-row" id="dialog-buttons-row">
+          <div class="form-group">
+            <label for="primary-btn-label">Primary Button</label>
+            <input type="text" id="primary-btn-label" value="ACCEPT" placeholder="Accept / Open">
+          </div>
+          <div class="form-group">
+            <label for="secondary-btn-label">Secondary Button</label>
+            <input type="text" id="secondary-btn-label" value="REJECT" placeholder="Reject / Cancel">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Wallpaper & Background -->
+      <div class="control-card">
+        <div class="card-title">
+          <span class="step-num">4</span>
+          <div>
+            <h4>Wallpaper & Background</h4>
+            <span class="card-subtitle">Upload your custom wallpaper or pick a curated theme</span>
+          </div>
+        </div>
+
+        <!-- Prominent Upload & Reset Action Buttons -->
+        <div class="wallpaper-actions-row">
+          <input type="file" id="wallpaper-upload" accept="image/*" class="file-hidden-input">
+          <button type="button" id="upload-trigger-btn" class="btn-upload-prominent">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Upload From Computer</span>
+          </button>
+          
+          <button type="button" id="reset-wallpaper-btn" class="btn-reset-wallpaper" title="Reset to default app wallpaper">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Reset Wallpaper</span>
+          </button>
+        </div>
+
+        <!-- Custom Upload Dropzone with Live Thumbnail Preview -->
+        <div class="upload-dropzone" id="dropzone">
+          <div class="dropzone-content" id="dropzone-empty-state">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p><strong>Or drag & drop any image here</strong></p>
+            <span class="dropzone-hint">Supports PNG, JPG, JPEG, WebP (Instant Preview, No Backend)</span>
+          </div>
+
+          <div class="uploaded-file-card hidden" id="upload-status">
+            <div class="uploaded-thumb-box">
+              <img id="upload-preview-thumb" src="" alt="Custom Wallpaper Preview">
+            </div>
+            <div class="uploaded-meta">
+              <strong id="uploaded-file-name">custom_wallpaper.jpg</strong>
+              <span class="active-badge">Active Wallpaper</span>
+            </div>
+            <button type="button" id="remove-custom-img" class="btn-remove-custom" title="Remove custom image">&times;</button>
+          </div>
+        </div>
+
+        <!-- Curated Preset Wallpapers -->
+        <div class="preset-wallpapers-section">
+          <label>Or select a built-in background:</label>
+          <div class="wallpapers-grid">
+            <button class="wallpaper-thumb active" data-bg="ff-fiery" title="Free Fire Fiery Theme">
+              <div class="thumb-preview bg-ff-fiery"></div>
+              <span>FF Lava</span>
+            </button>
+            <button class="wallpaper-thumb" data-bg="neon-cyber" title="Neon Cyberpunk">
+              <div class="thumb-preview bg-neon-cyber"></div>
+              <span>Cyberpunk</span>
+            </button>
+            <button class="wallpaper-thumb" data-bg="dark-gaming" title="Deep Gaming Void">
+              <div class="thumb-preview bg-dark-gaming"></div>
+              <span>Dark Void</span>
+            </button>
+            <button class="wallpaper-thumb" data-bg="battle-smoke" title="Battlefield Amber">
+              <div class="thumb-preview bg-battle-smoke"></div>
+              <span>Battleground</span>
+            </button>
+            <button class="wallpaper-thumb" data-bg="sunset-gradient" title="Sunset Aesthetic">
+              <div class="thumb-preview bg-sunset-gradient"></div>
+              <span>Sunset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Background Adjustments: Brightness, Blur & Dimming -->
+        <div class="sliders-wrapper">
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="bg-brightness">
+                <span>☀️</span> Background Brightness
+              </label>
+              <span id="brightness-val">100%</span>
+            </div>
+            <input type="range" id="bg-brightness" min="20" max="150" value="100">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="bg-blur">
+                <span>💧</span> Background Blur Effect
+              </label>
+              <span id="blur-val">0px</span>
+            </div>
+            <input type="range" id="bg-blur" min="0" max="25" value="0">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="bg-dim">
+                <span>🌑</span> Dimming Overlay
+              </label>
+              <span id="dim-val">35%</span>
+            </div>
+            <input type="range" id="bg-dim" min="0" max="90" value="35">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Phone Frame & Device Options -->
+      <div class="control-card">
+        <div class="card-title">
+          <span class="step-num">5</span>
+          <div>
+            <h4>Phone Frame & Aesthetics</h4>
+            <span class="card-subtitle">Device styling & accents</span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone-model">Phone Model</label>
+            <select id="phone-model">
+              <option value="dynamic-island">Modern Flagship (Dynamic Island)</option>
+              <option value="punch-hole">Modern Android (Hole Punch)</option>
+              <option value="bezel-less">Minimal Borderless</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="phone-color">Frame Finish</label>
+            <select id="phone-color">
+              <option value="dark-titanium">Dark Titanium</option>
+              <option value="midnight-black">Midnight Black</option>
+              <option value="silver-frost">Silver Frost</option>
+              <option value="gold-accent">Royal Gold</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="toggles-grid">
+          <label class="toggle-control">
+            <input type="checkbox" id="show-status-bar" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Show Status Bar (5G, WiFi, Battery)</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="show-home-bar" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Show Bottom Home Indicator</span>
+          </label>
+          <label class="toggle-control">
+            <input type="checkbox" id="show-watermark" checked>
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Show ScreenCraft Brand Badge</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Live Phone Mockup Preview -->
+    <section class="preview-panel">
+      <div class="preview-sticky-wrap">
+        <div class="preview-header">
+          <div class="preview-title">
+            <span class="live-dot"></span>
+            <h3>Live Phone Preview</h3>
+          </div>
+          <div class="preview-actions">
+            <button id="copy-preview-text" class="btn-sm" title="Copy message text">📋 Copy Text</button>
+            <button id="export-btn-preview" class="btn-sm btn-primary-sm">⚡ Download PNG</button>
+          </div>
+        </div>
+
+        <!-- Phone Device Wrapper -->
+        <div class="device-viewport">
+          <div class="phone-frame dark-titanium" id="phone-mockup">
+            <!-- Hardware Buttons for realism -->
+            <div class="phone-btn phone-btn-vol-up"></div>
+            <div class="phone-btn phone-btn-vol-down"></div>
+            <div class="phone-btn phone-btn-power"></div>
+
+            <!-- Glass Reflection Overlay -->
+            <div class="phone-glare"></div>
+
+            <!-- Phone Screen Area -->
+            <div class="phone-screen" id="phone-screen">
+              <!-- Wallpaper Background Layer -->
+              <div class="screen-wallpaper bg-ff-fiery" id="screen-wallpaper"></div>
+              <div class="screen-dim-overlay" id="screen-dim"></div>
+
+              <!-- Top Status Bar -->
+              <div class="status-bar" id="status-bar-elem">
+                <span class="status-time" id="status-time-display">09:41</span>
+                
+                <!-- Notch / Island Notch -->
+                <div class="phone-notch-container" id="phone-notch">
+                  <div class="dynamic-island">
+                    <span class="camera-lens"></span>
+                    <span class="sensor-dot"></span>
+                  </div>
+                </div>
+
+                <div class="status-icons">
+                  <span class="status-icon signal-icon">
+                    <span class="bar b1"></span>
+                    <span class="bar b2"></span>
+                    <span class="bar b3"></span>
+                    <span class="bar b4"></span>
+                  </span>
+                  <span class="status-icon wifi-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 3C7.5 3 3.6 4.7 0.6 7.6L12 21.4 23.4 7.6C20.4 4.7 16.5 3 12 3z"/>
+                    </svg>
+                  </span>
+                  <span class="status-icon battery-icon">
+                    <span class="battery-level"></span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Active Mockup Content Layer -->
+              <div class="screen-interactive-content" id="screen-content">
+                
+                <!-- 1. Game Pop-up Dialog Style -->
+                <div class="dialog-mockup game-theme-freefire" id="dialog-element">
+                  <div class="dialog-header-banner">
+                    <div class="dialog-app-tag">
+                      <span class="dialog-app-icon" id="dialog-app-icon">🔥</span>
+                      <span class="dialog-app-title" id="dialog-app-title">FREE FIRE</span>
+                    </div>
+                    <span class="dialog-badge" id="dialog-badge-text">SQUAD INVITE</span>
+                  </div>
+
+                  <div class="dialog-body">
+                    <div class="dialog-sender-row">
+                      <div class="sender-avatar" id="dialog-avatar">👑</div>
+                      <div class="sender-meta">
+                        <h4 class="sender-title" id="preview-sender">SquadLeader_OP</h4>
+                        <span class="sender-sub" id="preview-subtext">Ranked Battle Royale • Squad</span>
+                      </div>
+                    </div>
+
+                    <div class="dialog-message-box">
+                      <p class="dialog-quote" id="preview-message">Who called you to play? 😂</p>
+                    </div>
+                  </div>
+
+                  <div class="dialog-footer" id="preview-buttons-container">
+                    <button class="mock-btn mock-btn-secondary" id="preview-btn-secondary">REJECT</button>
+                    <button class="mock-btn mock-btn-primary" id="preview-btn-primary">ACCEPT</button>
+                  </div>
+                </div>
+
+                <!-- 2. Notification Toast Style (Toggled via layout mode) -->
+                <div class="notification-mockup hidden" id="notification-element">
+                  <div class="notif-header">
+                    <div class="notif-app">
+                      <span class="notif-icon" id="notif-icon">🔥</span>
+                      <span class="notif-app-name" id="notif-app-name">Free Fire</span>
+                      <span class="notif-bullet">•</span>
+                      <span class="notif-time">Now</span>
+                    </div>
+                  </div>
+                  <div class="notif-content">
+                    <strong class="notif-sender" id="notif-sender">SquadLeader_OP</strong>
+                    <p class="notif-msg" id="notif-message">Who called you to play? 😂</p>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- ScreenCraft Watermark -->
+              <div class="screen-watermark" id="preview-watermark">
+                <span>Created with ScreenCraft</span>
+              </div>
+
+              <!-- Bottom Home Indicator Bar -->
+              <div class="home-indicator-bar" id="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Tips & Hotkeys -->
+        <div class="preview-tips">
+          <div class="tip-item">💡 <span>Tip: Click <strong>"Export Image"</strong> to download a crisp, full resolution snapshot.</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Hidden canvas for rendering and exporting high-res snapshot -->
+  <canvas id="export-canvas" class="hidden"></canvas>
+
+  <!-- Export Modal / Toast Alert -->
+  <div class="toast-notification hidden" id="toast">
+    <span class="toast-icon">✅</span>
+    <span class="toast-message" id="toast-text">Message copied to clipboard!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>ScreenCraft Studio • Modern Custom App Screen & Phone Preview Generator</p>
+      <div class="footer-links">
+        <span>No backend required</span>
+        <span>•</span>
+        <span>100% Client-Side</span>
+        <span>•</span>
+        <span>HTML, CSS & JS</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
