@@ -23,10 +23,18 @@
       <nav class="nav-links">
         <a href="#studio" class="active">Studio</a>
         <a href="#templates">Quick Presets</a>
-        <a href="#features">Features</a>
+        <a href="#my-screens" class="nav-screens-link">My Screens <span class="nav-badge-pill" id="nav-screens-count">0</span></a>
       </nav>
       <div class="nav-actions">
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <button id="quick-reset-btn" class="btn-ghost" title="Reset all fields">Reset</button>
+        <button id="header-save-screen-btn" class="btn-ghost btn-save-nav" title="Save current configuration to My Screens">
+          <span>💾 Save Screen</span>
+        </button>
         <button id="download-screen-btn" class="btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -140,6 +148,21 @@
         <div class="custom-app-field hidden" id="custom-app-settings">
           <label for="custom-app-title">Custom App Title</label>
           <input type="text" id="custom-app-title" placeholder="e.g. Valorant Mobile / COD" value="Custom Game">
+        </div>
+
+        <div class="app-identifier-field" id="app-identifier-settings" style="margin-top: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="app-identifier">
+              <span>📱</span> App Identifier / Package Name (Android)
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="app-identifier" value="com.dts.freefireth" placeholder="e.g. com.dts.freefireth">
+              <span class="char-icon">📦</span>
+            </div>
+            <span class="field-hint" style="font-size: 0.725rem; color: var(--text-dim); display: block; margin-top: 0.35rem;">
+              Target Android app package name (used by Android app integration)
+            </span>
+          </div>
         </div>
       </div>
 
@@ -401,6 +424,7 @@
           </div>
           <div class="preview-actions">
             <button id="copy-preview-text" class="btn-sm" title="Copy message text">📋 Copy Text</button>
+            <button id="save-screen-preview-btn" class="btn-sm btn-save-sm" title="Save this configuration to My Screens">💾 Save Screen</button>
             <button id="export-btn-preview" class="btn-sm btn-primary-sm">⚡ Download PNG</button>
           </div>
         </div>
@@ -521,6 +545,114 @@
       </div>
     </section>
   </main>
+
+  <!-- My App Screens Section -->
+  <section class="my-screens-section" id="my-screens">
+    <div class="my-screens-container">
+      <div class="my-screens-header">
+        <div class="section-title-wrap">
+          <div class="section-badge">📁 LOCAL LIBRARY</div>
+          <div class="title-with-count">
+            <h2>My App Screens</h2>
+            <span class="screens-counter-pill" id="screens-total-pill">0 Screens</span>
+          </div>
+          <p>Create, manage, preview, and load your custom screen configurations. Saved locally in your browser with zero backend required.</p>
+        </div>
+        <div class="my-screens-actions">
+          <button id="add-starter-screens-btn" class="btn-secondary-action" title="Load sample demo screens">
+            <span>✨ Starter Presets</span>
+          </button>
+          <button id="save-current-screen-trigger-btn" class="btn-primary-action" title="Save current studio configuration">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>Save Current Screen</span>
+          </button>
+          <button id="clear-all-screens-btn" class="btn-danger-ghost hidden" title="Delete all saved screens">
+            <span>🗑️ Clear All</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Filter Bar for My Screens -->
+      <div class="screens-toolbar" id="screens-toolbar">
+        <div class="screens-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="screens-search-input" placeholder="Search saved screens by title, sender, or message..." aria-label="Search saved screens">
+        </div>
+        <div class="screens-filter-chips">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="freefire">🔥 Free Fire</button>
+          <button class="filter-chip" data-filter="pubg">🪂 PUBG</button>
+          <button class="filter-chip" data-filter="whatsapp">💬 WhatsApp</button>
+          <button class="filter-chip" data-filter="discord">🎮 Discord</button>
+          <button class="filter-chip" data-filter="instagram">📸 Instagram</button>
+          <button class="filter-chip" data-filter="custom">⚙️ Custom</button>
+        </div>
+      </div>
+
+      <!-- Saved Screens Cards Grid -->
+      <div class="screens-grid" id="saved-screens-grid">
+        <!-- Dynamically rendered via JS -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="screens-empty-state hidden" id="screens-empty-state">
+        <div class="empty-icon-wrap">
+          <span class="empty-emoji">📱</span>
+        </div>
+        <h3>No Saved Screens Yet</h3>
+        <p>You haven't saved any custom screen configurations yet. Customize your screen in the studio above and click <strong>"Save Current Screen"</strong> or load our starter presets.</p>
+        <div class="empty-actions">
+          <button id="empty-save-btn" class="btn-primary">💾 Save Current Studio Screen</button>
+          <button id="empty-demo-btn" class="btn-ghost">✨ Add Starter Presets</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Save / Edit Screen Modal -->
+  <div class="modal-overlay hidden" id="screen-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <span class="modal-icon" id="modal-icon">💾</span>
+          <div>
+            <h3 id="modal-heading">Save Custom Screen</h3>
+            <span class="modal-subtitle" id="modal-subtitle">Save your current studio configuration to My Screens</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="modal-close-btn" title="Close modal">&times;</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="modal-form-group">
+          <label for="screen-title-input">Screen Configuration Name <span class="required">*</span></label>
+          <input type="text" id="screen-title-input" placeholder="e.g. Free Fire Squad Prank, Mom Dinner Alert..." maxlength="60">
+        </div>
+
+        <div class="modal-form-group">
+          <label for="modal-app-identifier-input">App Identifier / Package Name (Android)</label>
+          <input type="text" id="modal-app-identifier-input" placeholder="e.g. com.dts.freefireth" maxlength="100">
+        </div>
+
+        <div class="modal-summary-card" id="modal-summary-card">
+          <!-- Live mini summary of current studio configuration being saved -->
+        </div>
+
+        <input type="hidden" id="editing-screen-id" value="">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" id="modal-cancel-btn">Cancel</button>
+        <button type="button" class="btn-primary" id="modal-save-btn">
+          <span id="modal-save-btn-text">Save Configuration</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Hidden canvas for rendering and exporting high-res snapshot -->
   <canvas id="export-canvas" class="hidden"></canvas>

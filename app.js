@@ -19,7 +19,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-freefire',
     defaultBg: 'ff-fiery',
     dim: 35,
-    blur: 0
+    blur: 0,
+    defaultPackageName: 'com.dts.freefireth'
   },
   pubg: {
     name: 'PUBG / BGMI',
@@ -35,7 +36,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-pubg',
     defaultBg: 'battle-smoke',
     dim: 40,
-    blur: 0
+    blur: 0,
+    defaultPackageName: 'com.tencent.ig'
   },
   whatsapp: {
     name: 'WhatsApp',
@@ -51,7 +53,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-whatsapp',
     defaultBg: 'dark-gaming',
     dim: 30,
-    blur: 2
+    blur: 2,
+    defaultPackageName: 'com.whatsapp'
   },
   discord: {
     name: 'Discord',
@@ -67,7 +70,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-discord',
     defaultBg: 'neon-cyber',
     dim: 35,
-    blur: 0
+    blur: 0,
+    defaultPackageName: 'com.discord'
   },
   instagram: {
     name: 'Instagram',
@@ -83,7 +87,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-instagram',
     defaultBg: 'sunset-gradient',
     dim: 25,
-    blur: 3
+    blur: 3,
+    defaultPackageName: 'com.instagram.android'
   },
   custom: {
     name: 'Custom App',
@@ -99,7 +104,8 @@ const APP_CONFIGS = {
     themeClass: 'game-theme-custom',
     defaultBg: 'dark-gaming',
     dim: 30,
-    blur: 0
+    blur: 0,
+    defaultPackageName: 'com.custom.app'
   }
 };
 
@@ -125,7 +131,8 @@ const state = {
   showStatusBar: true,
   showHomeBar: true,
   showWatermark: true,
-  customAppTitle: 'Custom Game'
+  customAppTitle: 'Custom Game',
+  appIdentifier: 'com.dts.freefireth'
 };
 
 // DOM Element References
@@ -141,6 +148,7 @@ const elements = {
   appCards: document.querySelectorAll('.app-card'),
   customAppSettings: document.getElementById('custom-app-settings'),
   customAppTitleInput: document.getElementById('custom-app-title'),
+  appIdentifierInput: document.getElementById('app-identifier'),
 
   // Step 2: Screen Mode
   layoutRadios: document.querySelectorAll('input[name="layout-mode"]'),
@@ -218,18 +226,88 @@ const elements = {
   toastText: document.getElementById('toast-text'),
 
   // Export Canvas
-  exportCanvas: document.getElementById('export-canvas')
+  exportCanvas: document.getElementById('export-canvas'),
+
+  // My App Screens Elements
+  navScreensCount: document.getElementById('nav-screens-count'),
+  headerSaveScreenBtn: document.getElementById('header-save-screen-btn'),
+  saveScreenPreviewBtn: document.getElementById('save-screen-preview-btn'),
+  screensTotalPill: document.getElementById('screens-total-pill'),
+  addStarterScreensBtn: document.getElementById('add-starter-screens-btn'),
+  saveCurrentScreenTriggerBtn: document.getElementById('save-current-screen-trigger-btn'),
+  clearAllScreensBtn: document.getElementById('clear-all-screens-btn'),
+  screensSearchInput: document.getElementById('screens-search-input'),
+  filterChips: document.querySelectorAll('.filter-chip'),
+  savedScreensGrid: document.getElementById('saved-screens-grid'),
+  screensEmptyState: document.getElementById('screens-empty-state'),
+  emptySaveBtn: document.getElementById('empty-save-btn'),
+  emptyDemoBtn: document.getElementById('empty-demo-btn'),
+
+  // Modal Elements
+  screenModal: document.getElementById('screen-modal'),
+  modalHeading: document.getElementById('modal-heading'),
+  modalSubtitle: document.getElementById('modal-subtitle'),
+  modalIcon: document.getElementById('modal-icon'),
+  screenTitleInput: document.getElementById('screen-title-input'),
+  modalAppIdentifierInput: document.getElementById('modal-app-identifier-input'),
+  modalSummaryCard: document.getElementById('modal-summary-card'),
+  editingScreenId: document.getElementById('editing-screen-id'),
+  modalCloseBtn: document.getElementById('modal-close-btn'),
+  modalCancelBtn: document.getElementById('modal-cancel-btn'),
+  modalSaveBtn: document.getElementById('modal-save-btn'),
+  modalSaveBtnText: document.getElementById('modal-save-btn-text')
 };
 
 // Initialize Application
 function initApp() {
   bindEvents();
+  bindMyScreensEvents();
   applyStateToUI();
   updateLivePreview();
+  renderSavedScreens();
 }
 
 // Bind all interactive event listeners
 function bindEvents() {
+  // --- Hamburger Mobile Menu ---
+  const hamburgerBtn = document.getElementById('nav-hamburger');
+  const navbar = document.querySelector('.navbar');
+  const navLinks = document.querySelector('.nav-links');
+
+  if (hamburgerBtn && navbar) {
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = navbar.classList.toggle('nav-open');
+      hamburgerBtn.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Close when a nav link is clicked
+    if (navLinks) {
+      navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          navbar.classList.remove('nav-open');
+          hamburgerBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
+    }
+
+    // Close when clicking outside the navbar
+    document.addEventListener('click', (e) => {
+      if (!navbar.contains(e.target)) {
+        navbar.classList.remove('nav-open');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && navbar.classList.contains('nav-open')) {
+        navbar.classList.remove('nav-open');
+        hamburgerBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   // App Selection Cards
   elements.appCards.forEach(card => {
     card.addEventListener('click', () => {
@@ -238,11 +316,19 @@ function bindEvents() {
     });
   });
 
+
   // Custom App Title Input
   elements.customAppTitleInput.addEventListener('input', (e) => {
     state.customAppTitle = e.target.value.trim() || 'CUSTOM APP';
     updateLivePreview();
   });
+
+  // App Identifier / Package Name Input
+  if (elements.appIdentifierInput) {
+    elements.appIdentifierInput.addEventListener('input', (e) => {
+      state.appIdentifier = e.target.value.trim();
+    });
+  }
 
   // Screen Layout Mode Radios
   elements.layoutRadios.forEach(radio => {
@@ -528,6 +614,14 @@ function selectApp(appKey) {
   elements.secondaryBtnInput.value = cfg.secondaryBtn;
   state.secondaryBtnText = cfg.secondaryBtn;
 
+  // Set default package name for app
+  if (cfg.defaultPackageName) {
+    state.appIdentifier = cfg.defaultPackageName;
+    if (elements.appIdentifierInput) {
+      elements.appIdentifierInput.value = cfg.defaultPackageName;
+    }
+  }
+
   // Set default wallpaper for app if no custom uploaded
   if (state.wallpaperType === 'preset') {
     state.presetWallpaper = cfg.defaultBg;
@@ -625,16 +719,76 @@ function resetWallpaperToDefault() {
   showToast('Wallpaper reset to default!');
 }
 
-// Apply Initial State to UI
+// Apply State to UI controls
 function applyStateToUI() {
-  elements.senderInput.value = state.senderName;
-  elements.messageInput.value = state.messageText;
-  elements.subtextInput.value = state.subtext;
-  elements.timeInput.value = state.timeText;
-  elements.primaryBtnInput.value = state.primaryBtnText;
-  elements.secondaryBtnInput.value = state.secondaryBtnText;
-  elements.phoneModelSelect.value = state.phoneModel;
-  elements.phoneColorSelect.value = state.phoneColor;
+  // 1. Content Inputs
+  if (elements.senderInput) elements.senderInput.value = state.senderName || '';
+  if (elements.messageInput) elements.messageInput.value = state.messageText || '';
+  if (elements.subtextInput) elements.subtextInput.value = state.subtext || '';
+  if (elements.timeInput) elements.timeInput.value = state.timeText || '09:41';
+  if (elements.primaryBtnInput) elements.primaryBtnInput.value = state.primaryBtnText || 'ACCEPT';
+  if (elements.secondaryBtnInput) elements.secondaryBtnInput.value = state.secondaryBtnText || 'REJECT';
+  if (elements.customAppTitleInput) elements.customAppTitleInput.value = state.customAppTitle || 'Custom Game';
+  if (elements.appIdentifierInput) elements.appIdentifierInput.value = state.appIdentifier || (APP_CONFIGS[state.selectedApp] ? APP_CONFIGS[state.selectedApp].defaultPackageName : 'com.custom.app');
+
+  // 2. App Cards & Preset Pills
+  elements.appCards.forEach(card => {
+    card.classList.toggle('active', card.getAttribute('data-app') === state.selectedApp);
+  });
+  elements.presetPills.forEach(pill => {
+    pill.classList.toggle('active', pill.getAttribute('data-preset') === state.selectedApp);
+  });
+  if (elements.customAppSettings) {
+    elements.customAppSettings.classList.toggle('hidden', state.selectedApp !== 'custom');
+  }
+
+  // 3. Layout Mode
+  elements.layoutRadios.forEach(radio => {
+    radio.checked = radio.value === state.layoutMode;
+  });
+  if (elements.dialogButtonsRow) {
+    if (state.layoutMode === 'game-dialog') {
+      elements.dialogButtonsRow.classList.remove('hidden');
+    } else {
+      elements.dialogButtonsRow.classList.add('hidden');
+    }
+  }
+
+  // 4. Wallpaper & Sliders
+  if (elements.brightnessSlider) {
+    elements.brightnessSlider.value = state.bgBrightness ?? 100;
+    if (elements.brightnessValLabel) elements.brightnessValLabel.innerText = `${state.bgBrightness ?? 100}%`;
+  }
+  if (elements.dimSlider) {
+    elements.dimSlider.value = state.bgDim ?? 35;
+    if (elements.dimValLabel) elements.dimValLabel.innerText = `${state.bgDim ?? 35}%`;
+  }
+  if (elements.blurSlider) {
+    elements.blurSlider.value = state.bgBlur ?? 0;
+    if (elements.blurValLabel) elements.blurValLabel.innerText = `${state.bgBlur ?? 0}px`;
+  }
+
+  if (state.wallpaperType === 'custom' && state.customWallpaperData) {
+    if (elements.uploadPreviewThumb) elements.uploadPreviewThumb.src = state.customWallpaperData;
+    if (elements.uploadedFileName) elements.uploadedFileName.innerText = state.customFileName || 'custom_wallpaper.jpg';
+    if (elements.uploadStatusChip) elements.uploadStatusChip.classList.remove('hidden');
+    if (elements.dropzoneEmptyState) elements.dropzoneEmptyState.classList.add('hidden');
+    elements.wallpaperThumbs.forEach(t => t.classList.remove('active'));
+  } else {
+    if (elements.uploadStatusChip) elements.uploadStatusChip.classList.add('hidden');
+    if (elements.dropzoneEmptyState) elements.dropzoneEmptyState.classList.remove('hidden');
+    if (elements.wallpaperUploadInput) elements.wallpaperUploadInput.value = '';
+    elements.wallpaperThumbs.forEach(t => {
+      t.classList.toggle('active', t.getAttribute('data-bg') === state.presetWallpaper);
+    });
+  }
+
+  // 5. Phone Model & Color & Toggles
+  if (elements.phoneModelSelect) elements.phoneModelSelect.value = state.phoneModel || 'dynamic-island';
+  if (elements.phoneColorSelect) elements.phoneColorSelect.value = state.phoneColor || 'dark-titanium';
+  if (elements.showStatusBarToggle) elements.showStatusBarToggle.checked = Boolean(state.showStatusBar);
+  if (elements.showHomeBarToggle) elements.showHomeBarToggle.checked = Boolean(state.showHomeBar);
+  if (elements.showWatermarkToggle) elements.showWatermarkToggle.checked = Boolean(state.showWatermark);
 }
 
 // Update the Live Phone Preview
@@ -1009,6 +1163,909 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     }
   }
   ctx.fillText(line, x, y);
+}
+
+// ==========================================================================
+// My App Screens Subsystem (Local Browser Storage & Screen Management)
+// ==========================================================================
+
+const STORAGE_KEY = 'screencraft_saved_screens';
+
+// Sample starter presets for instant onboarding
+const STARTER_PRESETS = [
+  {
+    id: 'starter_freefire_1',
+    uniqueId: 'starter_freefire_1',
+    appName: 'Free Fire',
+    appIdentifier: 'com.dts.freefireth',
+    packageName: 'com.dts.freefireth',
+    screenTitle: 'Free Fire Squad Prank',
+    title: 'Free Fire Squad Prank',
+    senderName: 'SquadLeader_OP',
+    message: 'Who called you to play? 😂 Hop in squad right now!',
+    messageText: 'Who called you to play? 😂 Hop in squad right now!',
+    displayMode: 'game-dialog',
+    layoutMode: 'game-dialog',
+    wallpaperInfo: {
+      type: 'preset',
+      presetKey: 'ff-fiery',
+      presetWallpaper: 'ff-fiery',
+      customData: null,
+      customFileName: '',
+      brightness: 100,
+      dim: 35,
+      blur: 0
+    },
+    buttonLabels: {
+      primary: 'ACCEPT',
+      secondary: 'REJECT',
+      primaryBtnText: 'ACCEPT',
+      secondaryBtnText: 'REJECT'
+    },
+    phoneStyle: {
+      model: 'dynamic-island',
+      color: 'dark-titanium',
+      showStatusBar: true,
+      showHomeBar: true,
+      showWatermark: true
+    },
+    createdDate: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedDate: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    selectedApp: 'freefire',
+    customAppTitle: 'FREE FIRE',
+    subtext: 'Ranked Battle Royale • Squad',
+    timeText: '09:41',
+    primaryBtnText: 'ACCEPT',
+    secondaryBtnText: 'REJECT',
+    wallpaperType: 'preset',
+    presetWallpaper: 'ff-fiery',
+    customWallpaperData: null,
+    customFileName: '',
+    bgBrightness: 100,
+    bgDim: 35,
+    bgBlur: 0,
+    phoneModel: 'dynamic-island',
+    phoneColor: 'dark-titanium',
+    showStatusBar: true,
+    showHomeBar: true,
+    showWatermark: true
+  },
+  {
+    id: 'starter_pubg_2',
+    uniqueId: 'starter_pubg_2',
+    appName: 'PUBG / BGMI',
+    appIdentifier: 'com.tencent.ig',
+    packageName: 'com.tencent.ig',
+    screenTitle: 'PUBG Room Drop Challenge',
+    title: 'PUBG Room Drop Challenge',
+    senderName: 'AirDrop_Hunter',
+    message: 'Squad room is open! Drop into Erangel now or lose tier rank! 🔥',
+    messageText: 'Squad room is open! Drop into Erangel now or lose tier rank! 🔥',
+    displayMode: 'game-dialog',
+    layoutMode: 'game-dialog',
+    wallpaperInfo: {
+      type: 'preset',
+      presetKey: 'battle-smoke',
+      presetWallpaper: 'battle-smoke',
+      customData: null,
+      customFileName: '',
+      brightness: 100,
+      dim: 40,
+      blur: 0
+    },
+    buttonLabels: {
+      primary: 'JOIN TEAM',
+      secondary: 'DECLINE',
+      primaryBtnText: 'JOIN TEAM',
+      secondaryBtnText: 'DECLINE'
+    },
+    phoneStyle: {
+      model: 'punch-hole',
+      color: 'midnight-black',
+      showStatusBar: true,
+      showHomeBar: true,
+      showWatermark: true
+    },
+    createdDate: new Date(Date.now() - 3600000).toISOString(),
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    updatedDate: new Date(Date.now() - 3600000).toISOString(),
+    updatedAt: new Date(Date.now() - 3600000).toISOString(),
+    selectedApp: 'pubg',
+    customAppTitle: 'PUBG MOBILE',
+    subtext: 'Erangel • Ranked Squad TPP',
+    timeText: '18:30',
+    primaryBtnText: 'JOIN TEAM',
+    secondaryBtnText: 'DECLINE',
+    wallpaperType: 'preset',
+    presetWallpaper: 'battle-smoke',
+    customWallpaperData: null,
+    customFileName: '',
+    bgBrightness: 100,
+    bgDim: 40,
+    bgBlur: 0,
+    phoneModel: 'punch-hole',
+    phoneColor: 'midnight-black',
+    showStatusBar: true,
+    showHomeBar: true,
+    showWatermark: true
+  },
+  {
+    id: 'starter_whatsapp_3',
+    uniqueId: 'starter_whatsapp_3',
+    appName: 'WhatsApp',
+    appIdentifier: 'com.whatsapp',
+    packageName: 'com.whatsapp',
+    screenTitle: 'Mom Dinner Alert 💖',
+    title: 'Mom Dinner Alert 💖',
+    senderName: 'Mom 💖',
+    message: 'Where are you? Dinner is getting cold, come home soon!',
+    messageText: 'Where are you? Dinner is getting cold, come home soon!',
+    displayMode: 'notification',
+    layoutMode: 'notification',
+    wallpaperInfo: {
+      type: 'preset',
+      presetKey: 'dark-gaming',
+      presetWallpaper: 'dark-gaming',
+      customData: null,
+      customFileName: '',
+      brightness: 95,
+      dim: 30,
+      blur: 2
+    },
+    buttonLabels: {
+      primary: 'REPLY',
+      secondary: 'DISMISS',
+      primaryBtnText: 'REPLY',
+      secondaryBtnText: 'DISMISS'
+    },
+    phoneStyle: {
+      model: 'dynamic-island',
+      color: 'silver-frost',
+      showStatusBar: true,
+      showHomeBar: true,
+      showWatermark: true
+    },
+    createdDate: new Date(Date.now() - 7200000).toISOString(),
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
+    updatedDate: new Date(Date.now() - 7200000).toISOString(),
+    updatedAt: new Date(Date.now() - 7200000).toISOString(),
+    selectedApp: 'whatsapp',
+    customAppTitle: 'WHATSAPP',
+    subtext: 'Online • Tap to reply',
+    timeText: '20:15',
+    primaryBtnText: 'REPLY',
+    secondaryBtnText: 'DISMISS',
+    wallpaperType: 'preset',
+    presetWallpaper: 'dark-gaming',
+    customWallpaperData: null,
+    customFileName: '',
+    bgBrightness: 95,
+    bgDim: 30,
+    bgBlur: 2,
+    phoneModel: 'dynamic-island',
+    phoneColor: 'silver-frost',
+    showStatusBar: true,
+    showHomeBar: true,
+    showWatermark: true
+  }
+];
+
+// Active filter & search query
+let currentScreenFilter = 'all';
+let currentSearchQuery = '';
+
+// Local Storage Accessors
+function getSavedScreens() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.error('Failed to read saved screens:', err);
+    return [];
+  }
+}
+
+function setSavedScreens(screens) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(screens));
+    return true;
+  } catch (err) {
+    console.error('Storage write error:', err);
+    if (err.name === 'QuotaExceededError' || err.code === 22) {
+      showToast('Storage full! Custom wallpaper is too large for local browser storage.');
+    } else {
+      showToast('Failed to save screen locally.');
+    }
+    return false;
+  }
+}
+
+// Bind My Screens interactive events
+function bindMyScreensEvents() {
+  // Save Triggers
+  if (elements.headerSaveScreenBtn) {
+    elements.headerSaveScreenBtn.addEventListener('click', () => openSaveModal());
+  }
+  if (elements.saveScreenPreviewBtn) {
+    elements.saveScreenPreviewBtn.addEventListener('click', () => openSaveModal());
+  }
+  if (elements.saveCurrentScreenTriggerBtn) {
+    elements.saveCurrentScreenTriggerBtn.addEventListener('click', () => openSaveModal());
+  }
+  if (elements.emptySaveBtn) {
+    elements.emptySaveBtn.addEventListener('click', () => openSaveModal());
+  }
+
+  // Starter presets triggers
+  if (elements.addStarterScreensBtn) {
+    elements.addStarterScreensBtn.addEventListener('click', loadStarterPresets);
+  }
+  if (elements.emptyDemoBtn) {
+    elements.emptyDemoBtn.addEventListener('click', loadStarterPresets);
+  }
+
+  // Clear all
+  if (elements.clearAllScreensBtn) {
+    elements.clearAllScreensBtn.addEventListener('click', clearAllSavedScreens);
+  }
+
+  // Search input
+  if (elements.screensSearchInput) {
+    elements.screensSearchInput.addEventListener('input', (e) => {
+      currentSearchQuery = e.target.value.trim().toLowerCase();
+      renderSavedScreens();
+    });
+  }
+
+  // Filter chips
+  elements.filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      elements.filterChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentScreenFilter = chip.getAttribute('data-filter') || 'all';
+      renderSavedScreens();
+    });
+  });
+
+  // Modal interactions
+  if (elements.modalCloseBtn) {
+    elements.modalCloseBtn.addEventListener('click', closeSaveModal);
+  }
+  if (elements.modalCancelBtn) {
+    elements.modalCancelBtn.addEventListener('click', closeSaveModal);
+  }
+  if (elements.screenModal) {
+    elements.screenModal.addEventListener('click', (e) => {
+      if (e.target === elements.screenModal) closeSaveModal();
+    });
+  }
+  if (elements.modalSaveBtn) {
+    elements.modalSaveBtn.addEventListener('click', handleSaveScreenSubmit);
+  }
+  if (elements.screenTitleInput) {
+    elements.screenTitleInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSaveScreenSubmit();
+      } else if (e.key === 'Escape') {
+        closeSaveModal();
+      }
+    });
+  }
+
+  // Card Grid Event Delegation for Action Buttons
+  if (elements.savedScreensGrid) {
+    elements.savedScreensGrid.addEventListener('click', (e) => {
+      const loadBtn = e.target.closest('.btn-card-load');
+      const editBtn = e.target.closest('.btn-card-edit');
+      const copyBtn = e.target.closest('.btn-card-copy');
+      const delBtn = e.target.closest('.btn-card-del');
+
+      if (loadBtn) {
+        const id = loadBtn.getAttribute('data-id');
+        loadScreenIntoStudio(id);
+      } else if (editBtn) {
+        const id = editBtn.getAttribute('data-id');
+        openSaveModal(id);
+      } else if (copyBtn) {
+        const id = copyBtn.getAttribute('data-id');
+        duplicateScreen(id);
+      } else if (delBtn) {
+        const id = delBtn.getAttribute('data-id');
+        deleteScreen(id);
+      }
+    });
+  }
+}
+
+// Open Save / Edit Modal
+function openSaveModal(editingId = null) {
+  const cfg = APP_CONFIGS[state.selectedApp] || APP_CONFIGS.freefire;
+  const appDisplayName = state.selectedApp === 'custom' ? (state.customAppTitle || 'Custom App') : cfg.name;
+  const activeAppIdentifier = state.appIdentifier || (cfg ? cfg.defaultPackageName : 'com.custom.app');
+
+  if (editingId) {
+    const screens = getSavedScreens();
+    const screen = screens.find(s => s.id === editingId);
+    if (!screen) return;
+
+    elements.editingScreenId.value = editingId;
+    elements.modalHeading.innerText = 'Edit Screen Configuration';
+    elements.modalSubtitle.innerText = 'Update title or overwrite configuration with current studio state';
+    elements.modalIcon.innerText = '✏️';
+    elements.screenTitleInput.value = screen.screenTitle || screen.title || '';
+    if (elements.modalAppIdentifierInput) {
+      elements.modalAppIdentifierInput.value = screen.appIdentifier || screen.packageName || activeAppIdentifier;
+    }
+    elements.modalSaveBtnText.innerText = 'Update Screen';
+  } else {
+    elements.editingScreenId.value = '';
+    elements.modalHeading.innerText = 'Save Custom Screen';
+    elements.modalSubtitle.innerText = 'Save current studio configuration to your browser library';
+    elements.modalIcon.innerText = '💾';
+    elements.screenTitleInput.value = `${appDisplayName} - ${state.senderName || 'My Mockup'}`;
+    if (elements.modalAppIdentifierInput) {
+      elements.modalAppIdentifierInput.value = activeAppIdentifier;
+    }
+    elements.modalSaveBtnText.innerText = 'Save Configuration';
+  }
+
+  // Build live summary card
+  const wallpaperDesc = state.wallpaperType === 'custom'
+    ? `🖼️ Custom Image (${state.customFileName || 'Uploaded'})`
+    : `🎨 Preset: ${formatWallpaperName(state.presetWallpaper)}`;
+
+  const modeDesc = state.layoutMode === 'game-dialog'
+    ? '⚔️ Game Pop-up Dialog'
+    : (state.layoutMode === 'notification' ? '🔔 Lockscreen Notification' : '📌 Top Banner');
+
+  elements.modalSummaryCard.innerHTML = `
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Application:</span>
+      <span class="modal-summary-val">${cfg.icon} ${appDisplayName}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">App Identifier (Android):</span>
+      <span class="modal-summary-val" style="font-family: monospace;">📦 ${escapeHtml(elements.modalAppIdentifierInput ? elements.modalAppIdentifierInput.value : activeAppIdentifier)}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Sender Name:</span>
+      <span class="modal-summary-val">👤 ${escapeHtml(state.senderName || 'Anonymous')}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Message:</span>
+      <span class="modal-summary-val">💬 "${escapeHtml(state.messageText || ' ')}"</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Display Mode:</span>
+      <span class="modal-summary-val">${modeDesc}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Wallpaper:</span>
+      <span class="modal-summary-val">${wallpaperDesc}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Button Labels:</span>
+      <span class="modal-summary-val">🔘 ${escapeHtml(state.primaryBtnText || 'ACCEPT')} / ${escapeHtml(state.secondaryBtnText || 'REJECT')}</span>
+    </div>
+    <div class="modal-summary-row">
+      <span class="modal-summary-label">Phone Model & Style:</span>
+      <span class="modal-summary-val">📱 ${formatPhoneModel(state.phoneModel)} • ${formatPhoneColor(state.phoneColor)}</span>
+    </div>
+  `;
+
+  elements.screenModal.classList.remove('hidden');
+  setTimeout(() => elements.screenTitleInput.focus(), 60);
+}
+
+// Close Modal
+function closeSaveModal() {
+  if (elements.screenModal) {
+    elements.screenModal.classList.add('hidden');
+  }
+}
+
+// Handle Save Screen Submit
+function handleSaveScreenSubmit() {
+  let title = elements.screenTitleInput.value.trim();
+  const cfg = APP_CONFIGS[state.selectedApp] || APP_CONFIGS.freefire;
+  const appDisplayName = state.selectedApp === 'custom' ? (state.customAppTitle || 'Custom App') : cfg.name;
+  const modalAppId = elements.modalAppIdentifierInput ? elements.modalAppIdentifierInput.value.trim() : '';
+  const appIdentifier = modalAppId || state.appIdentifier || (cfg ? cfg.defaultPackageName : 'com.custom.app');
+
+  if (!title) {
+    title = `${appDisplayName} Screen`;
+  }
+
+  // Update active state appIdentifier as well
+  state.appIdentifier = appIdentifier;
+  if (elements.appIdentifierInput) {
+    elements.appIdentifierInput.value = appIdentifier;
+  }
+
+  const screens = getSavedScreens();
+  const editingId = elements.editingScreenId.value;
+  const nowIso = new Date().toISOString();
+
+  let existingCreatedIso = nowIso;
+  let editingScreen = null;
+  if (editingId) {
+    editingScreen = screens.find(s => s.id === editingId);
+    if (editingScreen) {
+      existingCreatedIso = editingScreen.createdDate || editingScreen.createdAt || nowIso;
+    }
+  }
+
+  // Android App Readiness schema + full backward compatibility snapshot
+  const currentSnapshot = {
+    uniqueId: editingId || ('screen_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)),
+    appName: appDisplayName,
+    appIdentifier: appIdentifier,
+    packageName: appIdentifier,
+    screenTitle: title,
+    title: title,
+    senderName: state.senderName || 'SquadLeader_OP',
+    message: state.messageText || '',
+    messageText: state.messageText || '',
+    displayMode: state.layoutMode || 'game-dialog',
+    layoutMode: state.layoutMode || 'game-dialog',
+    wallpaperInfo: {
+      type: state.wallpaperType || 'preset',
+      presetKey: state.presetWallpaper || 'ff-fiery',
+      presetWallpaper: state.presetWallpaper || 'ff-fiery',
+      customData: state.customWallpaperData || null,
+      customFileName: state.customFileName || '',
+      brightness: state.bgBrightness ?? 100,
+      dim: state.bgDim ?? 35,
+      blur: state.bgBlur ?? 0
+    },
+    buttonLabels: {
+      primary: state.primaryBtnText || 'ACCEPT',
+      secondary: state.secondaryBtnText || 'REJECT',
+      primaryBtnText: state.primaryBtnText || 'ACCEPT',
+      secondaryBtnText: state.secondaryBtnText || 'REJECT'
+    },
+    phoneStyle: {
+      model: state.phoneModel || 'dynamic-island',
+      color: state.phoneColor || 'dark-titanium',
+      showStatusBar: state.showStatusBar !== false,
+      showHomeBar: state.showHomeBar !== false,
+      showWatermark: state.showWatermark !== false
+    },
+    createdDate: existingCreatedIso,
+    createdAt: existingCreatedIso,
+    updatedDate: nowIso,
+    updatedAt: nowIso,
+
+    // Top-level legacy fields for 1:1 backward compatibility
+    selectedApp: state.selectedApp,
+    customAppTitle: state.customAppTitle || 'Custom Game',
+    subtext: state.subtext || '',
+    timeText: state.timeText || '09:41',
+    primaryBtnText: state.primaryBtnText || 'ACCEPT',
+    secondaryBtnText: state.secondaryBtnText || 'REJECT',
+    wallpaperType: state.wallpaperType || 'preset',
+    presetWallpaper: state.presetWallpaper || 'ff-fiery',
+    customWallpaperData: state.customWallpaperData,
+    customFileName: state.customFileName || '',
+    bgBrightness: state.bgBrightness ?? 100,
+    bgDim: state.bgDim ?? 35,
+    bgBlur: state.bgBlur ?? 0,
+    phoneModel: state.phoneModel || 'dynamic-island',
+    phoneColor: state.phoneColor || 'dark-titanium',
+    showStatusBar: state.showStatusBar !== false,
+    showHomeBar: state.showHomeBar !== false,
+    showWatermark: state.showWatermark !== false
+  };
+
+  if (editingId) {
+    const idx = screens.findIndex(s => s.id === editingId);
+    if (idx !== -1) {
+      screens[idx] = {
+        ...screens[idx],
+        ...currentSnapshot
+      };
+      setSavedScreens(screens);
+      showToast(`Updated "${title}"! ✨`);
+    }
+  } else {
+    const newScreen = {
+      id: currentSnapshot.uniqueId,
+      ...currentSnapshot
+    };
+    screens.unshift(newScreen);
+    setSavedScreens(screens);
+    showToast(`Saved "${title}" to library! 🎉`);
+  }
+
+  closeSaveModal();
+  renderSavedScreens();
+}
+
+// Load a Saved Screen into the Studio
+function loadScreenIntoStudio(id) {
+  const screens = getSavedScreens();
+  const screen = screens.find(s => s.id === id);
+  if (!screen) {
+    showToast('Screen configuration not found.');
+    return;
+  }
+
+  const cfg = APP_CONFIGS[screen.selectedApp] || APP_CONFIGS.freefire;
+
+  // Populate active state supporting both direct & nested readiness schemas
+  state.selectedApp = screen.selectedApp || 'freefire';
+  state.customAppTitle = screen.customAppTitle || screen.appName || 'Custom Game';
+  state.appIdentifier = screen.appIdentifier || screen.packageName || cfg.defaultPackageName || 'com.custom.app';
+  state.layoutMode = screen.layoutMode || screen.displayMode || 'game-dialog';
+  state.senderName = screen.senderName || '';
+  state.messageText = screen.messageText || screen.message || '';
+  state.subtext = screen.subtext || '';
+  state.timeText = screen.timeText || '09:41';
+
+  // Button labels
+  if (screen.buttonLabels) {
+    state.primaryBtnText = screen.buttonLabels.primary || screen.buttonLabels.primaryBtnText || 'ACCEPT';
+    state.secondaryBtnText = screen.buttonLabels.secondary || screen.buttonLabels.secondaryBtnText || 'REJECT';
+  } else {
+    state.primaryBtnText = screen.primaryBtnText || 'ACCEPT';
+    state.secondaryBtnText = screen.secondaryBtnText || 'REJECT';
+  }
+
+  // Wallpaper info
+  if (screen.wallpaperInfo) {
+    state.wallpaperType = screen.wallpaperInfo.type || screen.wallpaperType || 'preset';
+    state.presetWallpaper = screen.wallpaperInfo.presetKey || screen.wallpaperInfo.presetWallpaper || screen.presetWallpaper || 'ff-fiery';
+    state.customWallpaperData = screen.wallpaperInfo.customData || screen.customWallpaperData || null;
+    state.customFileName = screen.wallpaperInfo.customFileName || screen.customFileName || '';
+    state.bgBrightness = screen.wallpaperInfo.brightness ?? screen.bgBrightness ?? 100;
+    state.bgDim = screen.wallpaperInfo.dim ?? screen.bgDim ?? 35;
+    state.bgBlur = screen.wallpaperInfo.blur ?? screen.bgBlur ?? 0;
+  } else {
+    state.wallpaperType = screen.wallpaperType || 'preset';
+    state.presetWallpaper = screen.presetWallpaper || 'ff-fiery';
+    state.customWallpaperData = screen.customWallpaperData || null;
+    state.customFileName = screen.customFileName || '';
+    state.bgBrightness = screen.bgBrightness ?? 100;
+    state.bgDim = screen.bgDim ?? 35;
+    state.bgBlur = screen.bgBlur ?? 0;
+  }
+
+  // Phone style
+  if (screen.phoneStyle) {
+    state.phoneModel = screen.phoneStyle.model || screen.phoneModel || 'dynamic-island';
+    state.phoneColor = screen.phoneStyle.color || screen.phoneColor || 'dark-titanium';
+    state.showStatusBar = screen.phoneStyle.showStatusBar !== false;
+    state.showHomeBar = screen.phoneStyle.showHomeBar !== false;
+    state.showWatermark = screen.phoneStyle.showWatermark !== false;
+  } else {
+    state.phoneModel = screen.phoneModel || 'dynamic-island';
+    state.phoneColor = screen.phoneColor || 'dark-titanium';
+    state.showStatusBar = screen.showStatusBar !== false;
+    state.showHomeBar = screen.showHomeBar !== false;
+    state.showWatermark = screen.showWatermark !== false;
+  }
+
+  // Apply to UI and live phone preview
+  applyStateToUI();
+  updateLivePreview();
+
+  // Smooth scroll to studio live preview
+  if (elements.phoneMockup) {
+    elements.phoneMockup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  showToast(`Loaded "${screen.screenTitle || screen.title}" into studio! 🚀`);
+}
+
+// Delete Screen
+function deleteScreen(id) {
+  const screens = getSavedScreens();
+  const screen = screens.find(s => s.id === id);
+  if (!screen) return;
+
+  const title = screen.screenTitle || screen.title || 'Screen';
+  if (confirm(`Are you sure you want to delete "${title}"?`)) {
+    const updated = screens.filter(s => s.id !== id);
+    setSavedScreens(updated);
+    renderSavedScreens();
+    showToast(`Deleted "${title}". 🗑️`);
+  }
+}
+
+// Duplicate Screen
+function duplicateScreen(id) {
+  const screens = getSavedScreens();
+  const screen = screens.find(s => s.id === id);
+  if (!screen) return;
+
+  const newId = 'screen_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+  const nowIso = new Date().toISOString();
+  const baseTitle = screen.screenTitle || screen.title || 'Screen';
+
+  const clone = {
+    ...screen,
+    id: newId,
+    uniqueId: newId,
+    screenTitle: `${baseTitle} (Copy)`,
+    title: `${baseTitle} (Copy)`,
+    createdDate: nowIso,
+    createdAt: nowIso,
+    updatedDate: nowIso,
+    updatedAt: nowIso
+  };
+
+  screens.unshift(clone);
+  setSavedScreens(screens);
+  renderSavedScreens();
+  showToast(`Duplicated "${baseTitle}"! 📋`);
+}
+
+// Load Starter Presets
+function loadStarterPresets() {
+  const existing = getSavedScreens();
+  const existingIds = new Set(existing.map(s => s.id));
+  let addedCount = 0;
+
+  STARTER_PRESETS.forEach(preset => {
+    if (!existingIds.has(preset.id)) {
+      existing.push({
+        ...preset,
+        createdAt: new Date().toISOString(),
+        createdDate: new Date().toISOString()
+      });
+      addedCount++;
+    }
+  });
+
+  setSavedScreens(existing);
+  renderSavedScreens();
+
+  if (addedCount > 0) {
+    showToast(`Added ${addedCount} starter presets! ✨`);
+  } else {
+    showToast('Starter presets are already in your library!');
+  }
+}
+
+// Clear All Saved Screens
+function clearAllSavedScreens() {
+  const screens = getSavedScreens();
+  if (screens.length === 0) return;
+
+  if (confirm(`Are you sure you want to delete all ${screens.length} saved screens? This cannot be undone.`)) {
+    setSavedScreens([]);
+    renderSavedScreens();
+    showToast('Cleared all saved screens.');
+  }
+}
+
+// Render Saved Screens Grid
+function renderSavedScreens() {
+  const allScreens = getSavedScreens();
+  const totalCount = allScreens.length;
+
+  // Update Counters
+  if (elements.navScreensCount) {
+    elements.navScreensCount.innerText = totalCount;
+  }
+  if (elements.screensTotalPill) {
+    elements.screensTotalPill.innerText = `${totalCount} Screen${totalCount === 1 ? '' : 's'}`;
+  }
+
+  // Toggle empty state vs grid
+  if (totalCount === 0) {
+    if (elements.screensEmptyState) elements.screensEmptyState.classList.remove('hidden');
+    if (elements.savedScreensGrid) elements.savedScreensGrid.classList.add('hidden');
+    if (elements.clearAllScreensBtn) elements.clearAllScreensBtn.classList.add('hidden');
+    return;
+  }
+
+  if (elements.screensEmptyState) elements.screensEmptyState.classList.add('hidden');
+  if (elements.savedScreensGrid) elements.savedScreensGrid.classList.remove('hidden');
+  if (elements.clearAllScreensBtn) elements.clearAllScreensBtn.classList.remove('hidden');
+
+  // Filter & Search
+  let filtered = allScreens;
+
+  if (currentScreenFilter !== 'all') {
+    filtered = filtered.filter(s => s.selectedApp === currentScreenFilter);
+  }
+
+  if (currentSearchQuery) {
+    filtered = filtered.filter(s => {
+      const q = currentSearchQuery;
+      const titleMatch = (s.screenTitle || s.title || '').toLowerCase().includes(q);
+      const senderMatch = (s.senderName || '').toLowerCase().includes(q);
+      const msgMatch = (s.message || s.messageText || '').toLowerCase().includes(q);
+      const appMatch = (s.selectedApp || s.appName || '').toLowerCase().includes(q);
+      const customAppMatch = (s.customAppTitle || '').toLowerCase().includes(q);
+      const idMatch = (s.appIdentifier || s.packageName || '').toLowerCase().includes(q);
+      return titleMatch || senderMatch || msgMatch || appMatch || customAppMatch || idMatch;
+    });
+  }
+
+  if (filtered.length === 0) {
+    elements.savedScreensGrid.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">🔍 No screens match your filter or search.</p>
+        <span style="font-size: 0.85rem; color: var(--text-dim);">Try clearing search or choosing "All"</span>
+      </div>
+    `;
+    return;
+  }
+
+  // Build Card HTML
+  const cardsHtml = filtered.map(screen => {
+    const cfg = APP_CONFIGS[screen.selectedApp] || APP_CONFIGS.freefire;
+    const appDisplayName = screen.appName || (screen.selectedApp === 'custom' ? (screen.customAppTitle || 'Custom App') : cfg.name);
+    const appPackage = screen.appIdentifier || screen.packageName || cfg.defaultPackageName || 'com.custom.app';
+    const displayTitle = screen.screenTitle || screen.title || 'Untitled Screen';
+    const displayMsg = screen.message || screen.messageText || '';
+
+    const mode = screen.displayMode || screen.layoutMode || 'game-dialog';
+    const modeTag = mode === 'game-dialog'
+      ? '⚔️ Pop-up'
+      : (mode === 'notification' ? '🔔 Lockscreen' : '📌 Banner');
+
+    const formattedDate = formatDate(screen.updatedDate || screen.updatedAt || screen.createdDate || screen.createdAt);
+
+    // Wallpaper info handling
+    let wpType = screen.wallpaperType || 'preset';
+    let wpPreset = screen.presetWallpaper || 'ff-fiery';
+    let wpCustomData = screen.customWallpaperData || null;
+    let wpBrightness = screen.bgBrightness ?? 100;
+    let wpBlur = screen.bgBlur ?? 0;
+    let wpDim = screen.bgDim ?? 35;
+
+    if (screen.wallpaperInfo) {
+      wpType = screen.wallpaperInfo.type || wpType;
+      wpPreset = screen.wallpaperInfo.presetKey || screen.wallpaperInfo.presetWallpaper || wpPreset;
+      wpCustomData = screen.wallpaperInfo.customData || wpCustomData;
+      wpBrightness = screen.wallpaperInfo.brightness ?? wpBrightness;
+      wpBlur = screen.wallpaperInfo.blur ?? wpBlur;
+      wpDim = screen.wallpaperInfo.dim ?? wpDim;
+    }
+
+    // Mini preview background style
+    let bgStyle = '';
+    let bgClass = '';
+    if (wpType === 'custom' && wpCustomData) {
+      bgStyle = `background-image: url("${wpCustomData}");`;
+    } else {
+      bgClass = `bg-${wpPreset || 'ff-fiery'}`;
+    }
+
+    const filterParts = [];
+    if (wpBrightness !== 100) filterParts.push(`brightness(${wpBrightness}%)`);
+    if (wpBlur > 0) filterParts.push(`blur(${wpBlur}px)`);
+    const filterStyle = filterParts.length > 0 ? `filter: ${filterParts.join(' ')};` : '';
+
+    const dimStyle = `background-color: rgba(0, 0, 0, ${wpDim / 100});`;
+
+    const wallpaperLabel = wpType === 'custom'
+      ? '🖼️ Custom Img'
+      : `🎨 ${formatWallpaperName(wpPreset)}`;
+
+    // Button labels
+    let primaryBtn = screen.primaryBtnText || 'ACCEPT';
+    if (screen.buttonLabels) {
+      primaryBtn = screen.buttonLabels.primary || screen.buttonLabels.primaryBtnText || primaryBtn;
+    }
+
+    // Phone model
+    let phoneModel = screen.phoneModel || 'dynamic-island';
+    if (screen.phoneStyle) {
+      phoneModel = screen.phoneStyle.model || phoneModel;
+    }
+
+    return `
+      <div class="screen-card" data-card-id="${screen.id || screen.uniqueId}">
+        <div class="screen-card-header">
+          <span class="card-app-badge badge-${screen.selectedApp || 'custom'}">
+            <span>${cfg.icon || '📱'}</span>
+            <span>${escapeHtml(appDisplayName)}</span>
+          </span>
+          <div class="card-meta-right">
+            <span class="card-mode-tag">${modeTag}</span>
+            <span class="card-date">${formattedDate}</span>
+          </div>
+        </div>
+
+        <div class="screen-card-mini-preview ${bgClass}" style="${bgStyle} ${filterStyle}">
+          <div class="mini-preview-dim" style="${dimStyle}"></div>
+          <div class="mini-preview-box">
+            <div class="mini-preview-top">
+              <span class="mini-avatar">${cfg.avatar || '👤'}</span>
+              <strong class="mini-sender">${escapeHtml(screen.senderName || 'Anonymous')}</strong>
+            </div>
+            <p class="mini-message">"${escapeHtml(displayMsg || ' ')}"</p>
+          </div>
+        </div>
+
+        <div class="screen-card-body">
+          <h4 class="screen-card-title">${escapeHtml(displayTitle)}</h4>
+          <div class="screen-card-chips">
+            <span class="detail-chip" title="Android App Package Name" style="font-family: monospace;">📦 ${escapeHtml(appPackage)}</span>
+            <span class="detail-chip" title="Sender Name">👤 ${escapeHtml(screen.senderName || 'Anonymous')}</span>
+            <span class="detail-chip" title="Buttons">🔘 ${escapeHtml(primaryBtn)}</span>
+            <span class="detail-chip" title="Phone Style">📱 ${formatPhoneModel(phoneModel)}</span>
+            <span class="detail-chip" title="Wallpaper">${wallpaperLabel}</span>
+          </div>
+        </div>
+
+        <div class="screen-card-actions">
+          <button type="button" class="btn-card-load" data-id="${screen.id || screen.uniqueId}" title="Load and preview this screen in the studio">
+            <span>👁️ Preview</span>
+          </button>
+          <button type="button" class="btn-card-edit" data-id="${screen.id || screen.uniqueId}" title="Edit name or update configuration">
+            <span>✏️ Edit</span>
+          </button>
+          <button type="button" class="btn-card-copy" data-id="${screen.id || screen.uniqueId}" title="Duplicate this screen">
+            <span>📋 Copy</span>
+          </button>
+          <button type="button" class="btn-card-del" data-id="${screen.id || screen.uniqueId}" title="Delete this screen">
+            <span>🗑️</span>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  elements.savedScreensGrid.innerHTML = cardsHtml;
+}
+
+// Helpers for formatting
+function formatPhoneModel(model) {
+  if (model === 'punch-hole') return 'Punch Hole';
+  if (model === 'bezel-less') return 'Borderless';
+  return 'Dynamic Island';
+}
+
+function formatPhoneColor(color) {
+  if (color === 'midnight-black') return 'Midnight Black';
+  if (color === 'silver-frost') return 'Silver Frost';
+  if (color === 'gold-accent') return 'Royal Gold';
+  return 'Dark Titanium';
+}
+
+function formatWallpaperName(bg) {
+  if (bg === 'ff-fiery') return 'FF Lava';
+  if (bg === 'neon-cyber') return 'Cyberpunk';
+  if (bg === 'dark-gaming') return 'Dark Void';
+  if (bg === 'battle-smoke') return 'Battleground';
+  if (bg === 'sunset-gradient') return 'Sunset';
+  return 'Preset Theme';
+}
+
+function formatDate(isoString) {
+  if (!isoString) return 'Just now';
+  try {
+    const d = new Date(isoString);
+    const now = new Date();
+    const diffMin = Math.floor((now - d) / 60000);
+    if (diffMin < 2) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return 'Recent';
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 // Start application when DOM is loaded
